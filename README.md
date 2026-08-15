@@ -13,6 +13,9 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web plugin
   - **Add sub-workspace** — pick a directory and register it as a sub-workspace (adds it only, without starting a session).
 - Each session's **`⋯` menu now includes Delete session** — permanently remove the session and its log (with a confirmation dialog; cannot be undone).
 - Each session's **`⋯` menu now includes Move to workspace** — pick a target directory, confirm, and the session's `cwd` is rewritten and re-accounted under that workspace (restart `dsh web` afterwards).
+- The workspace **`⋯` menu's Rename now also renames the folder on disk**, migrating every session and sub-workspace under it (restart `dsh web` afterwards).
+- The workspace **`⋯` menu's Delete now also deletes the folder on disk** (and its sub-workspaces); session logs are kept and their sessions fall back to Ungrouped.
+- Collapsing a workspace now collapses its sub-workspaces too, not just its sessions.
 
 Example:
 
@@ -30,6 +33,8 @@ Example:
 This package is an enhanced build of the built-in workspace browser (`@deepseek-ai/dsh-client-ui-workspace`). It derives parent/child relationships from workspace paths in `deriveGroups`, adds a `depth` per workspace, indents the tree accordingly, and turns the workspace row's `+` into a menu. Because it changes the workspace browser's internal rendering, it **replaces** the built-in `ui-workspace` entry.
 
 "Delete session" is implemented across both halves: the **host half** registers a `delete-session` slash command that deletes the session's persisted log and removes it from every workspace's session account (DSH has no "delete session" RPC — only archive), and the **browser half** adds the `⋯` menu item that invokes that command.
+
+"Delete / rename workspace" is likewise host-command driven: `delete-workspace` deletes the folder on disk and removes the workspace registration, and `rename-workspace` runs `tools/rename-workspace.js` to rename the folder and rewrite every session `cwd` under it.
 
 ## Requirements
 
@@ -91,15 +96,20 @@ npm publish --access public
 ├── README.md         # English docs
 ├── README.zh.md      # Chinese docs
 └── lib/
-    ├── index.js      # host half: registers the delete-session command
+    ├── index.js      # host half: registers delete-session / move-session / delete-workspace / rename-workspace commands
     └── client.js     # browser half (pre-bundled client bundle)
+└── tools/
+    ├── move-session.js     # session-move migration script
+    ├── rename-workspace.js # workspace-directory rename + session migration script
+    └── package.json        # keeps tools/*.js CommonJS
 ```
 
 ## Notes
 
-- The host half provides the `delete-session` command and the browser half provides the Delete session menu; `dsh.client` declares `platform: "web"` and its injection order.
-- The hierarchy is a **read-only derivation**: workspace data is never mutated. Deleting a parent workspace simply brings its children back to the top level.
+- The host half provides the `delete-session` / `move-session` / `delete-workspace` / `rename-workspace` commands and the browser half provides the matching menus; `dsh.client` declares `platform: "web"` and its injection order.
+- The hierarchy is a **read-only derivation**: workspace data is never mutated.
 - Path comparison is case-insensitive on Windows; both `/` and `\` are accepted as separators.
+- **Ungrouped** is not a real workspace — it is a virtual bucket for sessions that belong to no workspace. It cannot be renamed/deleted (it has no folder), but its sessions can still be renamed, moved, archived, and deleted individually.
 
 ## Delete session — known limitations
 
@@ -129,3 +139,19 @@ The storage locations can be overridden with env vars when needed:
 - `DSH_MIGRATE_BACKUP_DIR` (backup location)
 
 The script validates everything, writes a backup, and only mutates with `--apply`. Restart `dsh web` afterwards.
+
+## Delete / rename workspace (with the folder on disk)
+
+- **Delete workspace** = delete the folder on disk (`rm -r`) + remove the workspace and every sub-workspace under it. Session logs live under the DSH data directory (not inside the workspace folder), so they are kept and their sessions fall back to Ungrouped.
+- **Rename workspace** = rename the folder to the new name (`parent/new-name`) and rewrite every session `cwd` under it (log header + log location + projcache) plus every sub-workspace `path`; restart `dsh web` to see the new name.
+- Both refuse to run while any session under the folder is still live (open), to avoid corrupting live session logs.
+- Delete refuses filesystem roots, the home directory, and folders that contain the DSH data directory (`DSH_HOME`).
+- The rename script `tools/rename-workspace.js` supports dry-run / `--apply` and writes a backup first; sessions whose logs are missing are skipped (projcache only), so they never abort the rename.
+
+```bash
+# dry-run
+node tools/rename-workspace.js --id "<workspace-id>" "<new-name>"
+
+# actually apply
+node tools/rename-workspace.js --id "<workspace-id>" "<new-name>" --apply
+```
