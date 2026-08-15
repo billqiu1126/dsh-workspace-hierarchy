@@ -144,7 +144,7 @@ The script validates everything, writes a backup, and only mutates with `--apply
 
 - **Delete workspace** = delete the folder on disk (`rm -r`) + remove the workspace and every sub-workspace under it. Session logs live under the DSH data directory (not inside the workspace folder), so they are kept and their sessions fall back to Ungrouped.
 - **Rename workspace** = rename the folder to the new name (`parent/new-name`) and rewrite every session `cwd` under it (log header + log location + projcache) plus every sub-workspace `path`; the name updates in the sidebar immediately, restart `dsh web` to resync session data.
-- Both refuse to run while any session under the folder is still live (open), to avoid corrupting live session logs.
+- **Rename workspace** refuses to run while any non-blank session under the folder is still live (open) — it rewrites logs and could corrupt a live session. **Delete workspace** does NOT refuse live sessions (deleting never touches logs; it only leaves those sessions' cwd stale).
 - Delete refuses filesystem roots, the home directory, and folders that contain the DSH data directory (`DSH_HOME`).
 - The rename script `tools/rename-workspace.js` supports dry-run / `--apply` and writes a backup first; sessions whose logs are missing are skipped (projcache only), so they never abort the rename.
 
