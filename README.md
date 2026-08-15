@@ -12,6 +12,7 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web plugin
   - **New session** — start a session in that workspace (original behavior);
   - **Add sub-workspace** — pick a directory and register it as a sub-workspace (adds it only, without starting a session).
 - Each session's **`⋯` menu now includes Delete session** — permanently remove the session and its log (with a confirmation dialog; cannot be undone).
+- Each session's **`⋯` menu now includes Move to workspace** — pick a target directory, confirm, and the session's `cwd` is rewritten and re-accounted under that workspace (restart `dsh web` afterwards).
 
 Example:
 
@@ -106,9 +107,9 @@ npm publish --access public
 - A session that is still live (open in the current process) may re-materialize its log if it keeps emitting events; close / restart DSH to finalize deletion of a live session.
 - Deletion is triggered by running the `delete-session` command, so the session's agent must be resolvable (the browser passes the session id through `commands.execute`).
 
-## Move session (migration tool)
+## Move session (menu + migration tool)
 
-A low-level session mover ships in `tools/move-session.js`. DSH has no "move session" feature — a session's `cwd` is immutable — so this script rewrites the session log's `cwd` header and re-accounts it under the target workspace.
+Moving a session is exposed two ways: the session `⋯` menu **Move to workspace** (host `move-session` command + directory picker + confirmation), and the bundled low-level script `tools/move-session.js` that performs the actual rewrite. DSH has no "move session" feature — a session's `cwd` is immutable — so the command spawns this script to rewrite the session log's `cwd` header and re-account it under the target workspace.
 
 ```bash
 # list sessions under a workspace (find the exact name)

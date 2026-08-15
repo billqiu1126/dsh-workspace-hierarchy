@@ -13,6 +13,7 @@
 "use strict";
 
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const zlib = require("node:zlib");
 const crypto = require("node:crypto");
@@ -21,8 +22,9 @@ const APPLY = process.argv.includes("--apply");
 const argv = process.argv.slice(2).filter((a) => a !== "--apply");
 
 // 可被环境变量覆盖（便于在副本上演练）
-const SESSION_ROOT = process.env.DSH_SESSION_ROOT || "C:\\Users\\Bill Qiu\\.dsh\\sessions";
-const STORAGE_DIR = process.env.DSH_STORAGE_DIR || "C:\\Users\\Bill Qiu\\.dsh\\storages";
+const DSH_HOME = process.env.DSH_HOME || path.join(os.homedir(), ".dsh");
+const SESSION_ROOT = process.env.DSH_SESSION_ROOT || path.join(DSH_HOME, "sessions");
+const STORAGE_DIR = process.env.DSH_STORAGE_DIR || path.join(DSH_HOME, "storages");
 const BACKUP_ROOT = process.env.DSH_MIGRATE_BACKUP_DIR || path.join(path.dirname(STORAGE_DIR), "session-migrate-backups");
 
 const WORKSPACE_PATH = path.join(STORAGE_DIR, "workspace.json");
