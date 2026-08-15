@@ -11,6 +11,7 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) web plugin
 - Each workspace's **`+` button becomes a menu** with two choices:
   - **New session** — start a session in that workspace (original behavior);
   - **Add sub-workspace** — pick a directory and register it as a sub-workspace (adds it only, without starting a session).
+- Each session's **`⋯` menu now includes Delete session** — permanently remove the session and its log (with a confirmation dialog; cannot be undone).
 
 Example:
 
@@ -26,6 +27,8 @@ Example:
 ## How it works
 
 This package is an enhanced build of the built-in workspace browser (`@deepseek-ai/dsh-client-ui-workspace`). It derives parent/child relationships from workspace paths in `deriveGroups`, adds a `depth` per workspace, indents the tree accordingly, and turns the workspace row's `+` into a menu. Because it changes the workspace browser's internal rendering, it **replaces** the built-in `ui-workspace` entry.
+
+"Delete session" is implemented in this package's **host half**: it registers a `delete-session` slash command that deletes the session's persisted log and removes it from every workspace's session account (DSH itself has no "delete session" RPC — only archive).
 
 ## Requirements
 
@@ -87,12 +90,18 @@ npm publish --access public
 ├── README.md         # English docs
 ├── README.zh.md      # Chinese docs
 └── lib/
-    ├── index.js      # host half (no-op; pure UI plugin)
+    ├── index.js      # host half: registers the delete-session command
     └── client.js     # browser half (pre-bundled client bundle)
 ```
 
 ## Notes
 
-- Pure web client plugin — no host-side logic. `dsh.client` declares `platform: "web"` and its injection order.
+- The host half provides the `delete-session` command and the browser half provides the Delete session menu; `dsh.client` declares `platform: "web"` and its injection order.
 - The hierarchy is a **read-only derivation**: workspace data is never mutated. Deleting a parent workspace simply brings its children back to the top level.
 - Path comparison is case-insensitive on Windows; both `/` and `\` are accepted as separators.
+
+## Delete session — known limitations
+
+- DSH has no "permanently delete session" RPC (only archive), so the host half deletes the JSONL backend's per-session log file directly (`sessionPersistence.locate()` then `rm`).
+- A session still live in the current process (open): after its log is deleted, if it keeps emitting events the log may be re-written; close / restart DSH to finalize deletion of a live session.
+- The delete-session command runs through the currently-open session, so a session must be open before deleting.
