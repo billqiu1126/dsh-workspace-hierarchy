@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@billqiu1126/dsh-workspace-hierarchy",
   "description": "DeepSeek Harness web plugin: hierarchical workspace browser. Nests workspaces by directory path (main/sub-workspace) and adds an \"Add sub-workspace\" action to each workspace's + menu.",
   "version": "0.1.0",
