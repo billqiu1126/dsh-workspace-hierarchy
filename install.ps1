@@ -12,7 +12,7 @@
 # in README.md — the two are alternatives, pick one.
 
 param(
-    [string]$Package = "@billqiu/dsh-workspace-hierarchy",
+    [string]$Package = "@billqiu1126/dsh-workspace-hierarchy",
     [string]$Profile = "web",
     [string]$DshHome = ""
 )
@@ -56,7 +56,7 @@ if (-not (Test-Path -LiteralPath $patchFile)) {
 }
 
 $content = Get-Content -Raw -LiteralPath $patchFile
-$marker  = "@billqiu/dsh-workspace-hierarchy"
+$marker  = "@billqiu1126/dsh-workspace-hierarchy"
 
 if ($content.Contains($marker)) {
     Write-Host "==> cordis.patch.yml already contains the plugin entries — skipping." -ForegroundColor Green

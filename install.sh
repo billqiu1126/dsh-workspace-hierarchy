@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-PACKAGE="${1:-@billqiu/dsh-workspace-hierarchy}"
+PACKAGE="${1:-@billqiu1126/dsh-workspace-hierarchy}"
 PROFILE="${PROFILE:-web}"
 DSH_HOME_DIR="${DSH_HOME:-$HOME/.dsh}"
 
@@ -43,7 +43,7 @@ if [ ! -f "$PATCH_FILE" ]; then
     printf '[]\n' > "$PATCH_FILE"
 fi
 
-if grep -q "@billqiu/dsh-workspace-hierarchy" "$PATCH_FILE"; then
+if grep -q "@billqiu1126/dsh-workspace-hierarchy" "$PATCH_FILE"; then
     echo "==> cordis.patch.yml already contains the plugin entries — skipping."
 elif grep -Eq '^[[:space:]]*\[\][[:space:]]*$' "$PATCH_FILE"; then
     # Fresh/empty array: write the entries (replaces the boilerplate header).
