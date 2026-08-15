@@ -105,3 +105,26 @@ npm publish --access public
 - DSH has no "permanently delete session" RPC (only archive), so the host half deletes the JSONL backend's per-session log artifact directly (`sessionPersistence.list()`/`locate()` then `rm`).
 - A session that is still live (open in the current process) may re-materialize its log if it keeps emitting events; close / restart DSH to finalize deletion of a live session.
 - Deletion is triggered by running the `delete-session` command, so the session's agent must be resolvable (the browser passes the session id through `commands.execute`).
+
+## Move session (migration tool)
+
+A low-level session mover ships in `tools/move-session.js`. DSH has no "move session" feature — a session's `cwd` is immutable — so this script rewrites the session log's `cwd` header and re-accounts it under the target workspace.
+
+```bash
+# list sessions under a workspace (find the exact name)
+node tools/move-session.js --list "<workspace path>"
+
+# dry-run (validates, writes nothing)
+node tools/move-session.js "<session path>" "<session name>" "<target workspace path>"
+
+# actually move
+node tools/move-session.js "<session path>" "<session name>" "<target workspace path>" --apply
+```
+
+The storage locations can be overridden with env vars when needed:
+
+- `DSH_SESSION_ROOT` (default `~/.dsh/sessions`)
+- `DSH_STORAGE_DIR` (default `~/.dsh/storages`)
+- `DSH_MIGRATE_BACKUP_DIR` (backup location)
+
+The script validates everything, writes a backup, and only mutates with `--apply`. Restart `dsh web` afterwards.

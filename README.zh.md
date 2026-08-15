@@ -105,3 +105,26 @@ npm publish --access public
 - DSH 没有「永久删除会话」RPC（只有归档），所以宿主侧直接删除 JSONL 后端的会话日志文件（`sessionPersistence.list()`/`locate()` 后 `rm`）。
 - 仍在当前进程里打开（存活）的会话：日志被删除后如果继续产生事件，日志可能被重新写入；关闭 / 重启 DSH 才能最终确定对存活会话的删除。
 - 删除通过运行 `delete-session` 命令触发，浏览器侧通过 `commands.execute` 传入会话 id。
+
+## 移动会话（迁移工具）
+
+插件里附带了一个低层级的会话移动工具 `tools/move-session.js`。DSH 没有「移动会话」功能（会话的 `cwd` 不可变），所以这个脚本会重写会话日志里的 `cwd` 头，并把它重新挂到目标工作区下。
+
+```bash
+# 列出某工作区下的会话（找到准确的「名称」）
+node tools/move-session.js --list "<工作区路径>"
+
+# dry-run（只校验、不落盘）
+node tools/move-session.js "<会话路径>" "<会话名称>" "<目标工作区路径>"
+
+# 真正移动
+node tools/move-session.js "<会话路径>" "<会话名称>" "<目标工作区路径>" --apply
+```
+
+需要时可用环境变量覆盖存储位置：
+
+- `DSH_SESSION_ROOT`（默认 `~/.dsh/sessions`）
+- `DSH_STORAGE_DIR`（默认 `~/.dsh/storages`）
+- `DSH_MIGRATE_BACKUP_DIR`（备份位置）
+
+脚本会校验一切、先写备份，只有加 `--apply` 才真正改动；执行后重启 `dsh web`。

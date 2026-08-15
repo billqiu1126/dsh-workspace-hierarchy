@@ -29,6 +29,7 @@
   "files": [
     "lib/index.js",
     "lib/client.js",
+    "tools/move-session.js",
     "README.md",
     "README.zh.md",
     "install.ps1",
